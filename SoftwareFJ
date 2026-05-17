@@ -1,12 +1,11 @@
-# ==========================================================================
 # SISTEMA INTEGRAL DE GESTIÓN DE CLIENTES, SERVICIOS Y RESERVAS SOFTWARE FJ
 # Interfaz gráfica: Tkinter
-# Participantes: Jose Alejandro Hernandez Arias
-#                
-#               
+# Participantes:
+# Jose Alejandro Hernandez Arias
+# Deily  Marcela Castro Martinez             
+# Andres Giovanni Perea Lievano              
 # Universidad Nacional Abierta y a Distancia
 # Fuente: Autoría propia
-# ==========================================================================
 
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -15,10 +14,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 
-
-# ==========================================================================
 # CONFIGURACIÓN DEL ARCHIVO DE LOGS EN FORMATO .TXT
-# ==========================================================================
 
 logging.basicConfig(
     filename="software_fj_log.txt",
@@ -28,9 +24,8 @@ logging.basicConfig(
 )
 
 
-# ==========================================================================
 # EXCEPCIONES PERSONALIZADAS
-# ==========================================================================
+
 
 class SistemaFJError(Exception):
     # Excepción base del sistema Software FJ.
@@ -62,9 +57,8 @@ class CalculoCostoError(SistemaFJError):
     pass
 
 
-# ==========================================================================
 # CLASE ABSTRACTA GENERAL DEL SISTEMA
-# ==========================================================================
+
 
 class EntidadSistema(ABC):
     # Clase abstracta que representa una entidad general del sistema.
@@ -87,10 +81,7 @@ class EntidadSistema(ABC):
         # Método abstracto obligatorio para las clases derivadas.
         pass
 
-
-# ==========================================================================
 # CLASE CLIENTE CON ENCAPSULACIÓN Y VALIDACIONES
-# ==========================================================================
 
 class Cliente(EntidadSistema):
     # Clase que representa un cliente de Software FJ.
@@ -176,9 +167,7 @@ class Cliente(EntidadSistema):
         )
 
 
-# ==========================================================================
 # CLASE ABSTRACTA SERVICIO
-# ==========================================================================
 
 class Servicio(EntidadSistema):
     # Clase abstracta que representa un servicio general.
@@ -250,9 +239,7 @@ class Servicio(EntidadSistema):
         )
 
 
-# ==========================================================================
 # SERVICIO 1: RESERVA DE SALAS
-# ==========================================================================
 
 class ReservaSala(Servicio):
     # Servicio especializado para reservas de salas.
@@ -309,10 +296,7 @@ class ReservaSala(Servicio):
         # Describe el servicio de reserva de sala.
         return f"Sala con capacidad para {self.capacidad} personas."
 
-
-# ==========================================================================
 # SERVICIO 2: ALQUILER DE EQUIPOS
-# ==========================================================================
 
 class AlquilerEquipo(Servicio):
     # Servicio especializado para alquiler de equipos.
@@ -365,10 +349,7 @@ class AlquilerEquipo(Servicio):
         # Describe el servicio de alquiler de equipo.
         return f"Alquiler de equipo tipo {self.tipo_equipo}."
 
-
-# ==========================================================================
 # SERVICIO 3: ASESORÍA ESPECIALIZADA
-# ==========================================================================
 
 class AsesoriaEspecializada(Servicio):
     # Servicio especializado para asesorías.
@@ -421,10 +402,7 @@ class AsesoriaEspecializada(Servicio):
         # Describe el servicio de asesoría.
         return f"Asesoría especializada en {self.area}."
 
-
-# ==========================================================================
 # CLASE RESERVA
-# ==========================================================================
 
 class Reserva(EntidadSistema):
     # Clase que representa una reserva.
@@ -550,9 +528,7 @@ class Reserva(EntidadSistema):
         )
 
 
-# ==========================================================================
 # CONTROLADOR DEL SISTEMA
-# ==========================================================================
 
 class SistemaSoftwareFJ:
     # Clase controladora que administra clientes, servicios y reservas.
@@ -786,9 +762,8 @@ class SistemaSoftwareFJ:
             logging.info("Finalizó intento de editar valor de servicio.")
 
 
-# ==========================================================================
 # INTERFAZ GRÁFICA TKINTER
-# ==========================================================================
+
 
 class AplicacionTkinter:
     # Clase principal de la interfaz gráfica.
@@ -846,9 +821,9 @@ class AplicacionTkinter:
         self.crear_pestana_servicios()
         self.crear_pestana_logs()
 
-    # ==========================================================================
+    
     # PESTAÑA CLIENTES
-    # ==========================================================================
+
 
     def crear_pestana_clientes(self):
         # Crea formulario de gestión de clientes.
@@ -1311,9 +1286,8 @@ class AplicacionTkinter:
         for reserva in self.sistema.reservas:
             self.lista_reservas.insert(tk.END, reserva.mostrar_info())
 
-    # ==========================================================================
+
     # PESTAÑA EDITAR SERVICIOS
-    # ==========================================================================
 
     def crear_pestana_servicios(self):
         # Crea frame principal para editar servicios.
@@ -1436,9 +1410,9 @@ class AplicacionTkinter:
             self.lista_servicios.insert(tk.END, f"Descripción: {servicio.describir_servicio()}")
             self.lista_servicios.insert(tk.END, "-" * 100)
 
-    # ==========================================================================
+    
     # PESTAÑA LOGS
-    # ==========================================================================
+    
 
     def crear_pestana_logs(self):
         # Crea frame de logs.
@@ -1478,9 +1452,7 @@ class AplicacionTkinter:
             self.texto_logs.insert(tk.END, contenido)
 
 
-# ==========================================================================
 # FUNCIÓN PRINCIPAL
-# ==========================================================================
 
 def main():
     # Registra inicio de la aplicación.
@@ -1499,9 +1471,9 @@ def main():
     logging.info("Aplicación Software FJ finalizada.")
 
 
-# ==========================================================================
+
 # PUNTO DE ENTRADA DEL PROGRAMA
-# ================================================================
+
 
 if __name__ == "__main__":
     main()
