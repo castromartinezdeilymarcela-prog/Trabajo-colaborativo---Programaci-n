@@ -1,1 +1,1340 @@
+# ==========================================================================
+# SISTEMA INTEGRAL DE GESTIÓN DE CLIENTES, SERVICIOS Y RESERVAS SOFTWARE FJ
+# Lenguaje: Python
+# Interfaz gráfica: Tkinter
+# Autor: Grupo colaborativo
+# ==========================================================================
 
+# Importa ABC para crear clases abstractas.
+from abc import ABC, abstractmethod
+
+# Importa datetime para manejar fechas y horas.
+from datetime import datetime
+
+# Importa logging para registrar eventos y errores en archivo.
+import logging
+
+# Importa tkinter para crear la interfaz gráfica.
+import tkinter as tk
+
+# Importa ttk para usar controles visuales modernos de Tkinter.
+from tkinter import ttk
+
+# Importa messagebox para mostrar mensajes emergentes.
+from tkinter import messagebox
+
+# Importa random para generar simulaciones automáticas.
+import random
+
+
+# ================================================================
+# CONFIGURACIÓN DEL ARCHIVO DE LOGS
+# ================================================================
+
+# Configura el archivo donde se guardarán errores y eventos.
+logging.basicConfig(
+    filename="software_fj.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8"
+)
+
+
+# ================================================================
+# EXCEPCIONES PERSONALIZADAS DEL SISTEMA
+# ================================================================
+
+class SistemaFJError(Exception):
+    # Excepción base personalizada para el sistema Software FJ.
+    pass
+
+
+class DatoInvalidoError(SistemaFJError):
+    # Excepción para datos inválidos ingresados por el usuario.
+    pass
+
+
+class ClienteInvalidoError(SistemaFJError):
+    # Excepción para errores relacionados con clientes.
+    pass
+
+
+class ServicioNoDisponibleError(SistemaFJError):
+    # Excepción para servicios no disponibles.
+    pass
+
+
+class ReservaError(SistemaFJError):
+    # Excepción para errores relacionados con reservas.
+    pass
+
+
+class CalculoCostoError(SistemaFJError):
+    # Excepción para errores en cálculos de costos.
+    pass
+
+
+# ================================================================
+# CLASE ABSTRACTA GENERAL DEL SISTEMA
+# ================================================================
+
+class EntidadSistema(ABC):
+    # Clase abstracta que representa cualquier entidad general del sistema.
+
+    def __init__(self, identificador):
+        # Constructor que recibe un identificador.
+        if not identificador:
+            # Valida que el identificador no esté vacío.
+            raise DatoInvalidoError("El identificador no puede estar vacío.")
+
+        # Guarda el identificador como atributo protegido.
+        self._identificador = identificador
+
+    @property
+    def identificador(self):
+        # Devuelve el identificador de la entidad.
+        return self._identificador
+
+    @abstractmethod
+    def mostrar_info(self):
+        # Método abstracto obligatorio para las clases hijas.
+        pass
+
+
+# ================================================================
+# CLASE CLIENTE CON ENCAPSULACIÓN Y VALIDACIONES
+# ================================================================
+
+class Cliente(EntidadSistema):
+    # Clase que representa un cliente de Software FJ.
+
+    def __init__(self, identificador, nombre, documento, telefono, correo):
+        # Llama al constructor de la clase padre.
+        super().__init__(identificador)
+
+        # Valida y asigna el nombre del cliente.
+        self.__nombre = self.__validar_texto(nombre, "nombre")
+
+        # Valida y asigna el documento del cliente.
+        self.__documento = self.__validar_documento(documento)
+
+        # Valida y asigna el teléfono del cliente.
+        self.__telefono = self.__validar_telefono(telefono)
+
+        # Valida y asigna el correo del cliente.
+        self.__correo = self.__validar_correo(correo)
+
+    def __validar_texto(self, valor, campo):
+        # Valida que un texto no esté vacío.
+        if not valor or not valor.strip():
+            # Lanza error si el texto está vacío.
+            raise ClienteInvalidoError(f"El campo {campo} no puede estar vacío.")
+
+        # Retorna el texto sin espacios sobrantes.
+        return valor.strip()
+
+    def __validar_documento(self, documento):
+        # Valida que el documento sea numérico.
+        if not documento or not documento.isdigit():
+            # Lanza error si el documento no es válido.
+            raise ClienteInvalidoError("El documento debe contener solo números.")
+
+        # Valida que el documento tenga longitud suficiente.
+        if len(documento) < 5:
+            # Lanza error si el documento es demasiado corto.
+            raise ClienteInvalidoError("El documento debe tener mínimo 5 dígitos.")
+
+        # Retorna el documento validado.
+        return documento
+
+    def __validar_telefono(self, telefono):
+        # Valida que el teléfono sea numérico.
+        if not telefono or not telefono.isdigit():
+            # Lanza error si el teléfono contiene letras o símbolos.
+            raise ClienteInvalidoError("El teléfono debe contener solo números.")
+
+        # Valida longitud mínima del teléfono.
+        if len(telefono) < 7:
+            # Lanza error si el teléfono es muy corto.
+            raise ClienteInvalidoError("El teléfono debe tener mínimo 7 dígitos.")
+
+        # Retorna el teléfono validado.
+        return telefono
+
+    def __validar_correo(self, correo):
+        # Valida que el correo tenga estructura básica.
+        if not correo or "@" not in correo or "." not in correo:
+            # Lanza error si el correo no es válido.
+            raise ClienteInvalidoError("El correo electrónico no es válido.")
+
+        # Retorna el correo en minúsculas.
+        return correo.strip().lower()
+
+    @property
+    def nombre(self):
+        # Retorna el nombre del cliente.
+        return self.__nombre
+
+    @property
+    def documento(self):
+        # Retorna el documento del cliente.
+        return self.__documento
+
+    @property
+    def telefono(self):
+        # Retorna el teléfono del cliente.
+        return self.__telefono
+
+    @property
+    def correo(self):
+        # Retorna el correo del cliente.
+        return self.__correo
+
+    def mostrar_info(self):
+        # Devuelve la información del cliente en texto.
+        return f"{self.nombre} | Documento: {self.documento} | Tel: {self.telefono} | Email: {self.correo}"
+
+
+# ================================================================
+# CLASE ABSTRACTA SERVICIO
+# ================================================================
+
+class Servicio(EntidadSistema):
+    # Clase abstracta que representa un servicio general.
+
+    def __init__(self, identificador, nombre, precio_base, disponible=True):
+        # Llama al constructor de la clase padre.
+        super().__init__(identificador)
+
+        # Valida que el nombre no esté vacío.
+        if not nombre or not nombre.strip():
+            # Lanza error si el nombre está vacío.
+            raise DatoInvalidoError("El nombre del servicio no puede estar vacío.")
+
+        # Valida que el precio base sea positivo.
+        if precio_base <= 0:
+            # Lanza error si el precio no es válido.
+            raise DatoInvalidoError("El precio base debe ser mayor que cero.")
+
+        # Guarda el nombre del servicio.
+        self._nombre = nombre.strip()
+
+        # Guarda el precio base del servicio.
+        self._precio_base = precio_base
+
+        # Guarda el estado de disponibilidad.
+        self._disponible = disponible
+
+    @property
+    def nombre(self):
+        # Retorna el nombre del servicio.
+        return self._nombre
+
+    @property
+    def precio_base(self):
+        # Retorna el precio base del servicio.
+        return self._precio_base
+
+    @property
+    def disponible(self):
+        # Retorna si el servicio está disponible.
+        return self._disponible
+
+    def validar_disponibilidad(self):
+        # Valida que el servicio esté disponible.
+        if not self._disponible:
+            # Lanza error si el servicio no está disponible.
+            raise ServicioNoDisponibleError(f"El servicio {self.nombre} no está disponible.")
+
+    @abstractmethod
+    def calcular_costo(self, duracion, descuento=0, impuesto=0):
+        # Método abstracto para calcular costo.
+        pass
+
+    @abstractmethod
+    def describir_servicio(self):
+        # Método abstracto para describir el servicio.
+        pass
+
+    def mostrar_info(self):
+        # Devuelve información general del servicio.
+        estado = "Disponible" if self.disponible else "No disponible"
+        return f"{self.nombre} | Precio base: ${self.precio_base:,.0f} | Estado: {estado}"
+
+
+# ================================================================
+# SERVICIO ESPECIALIZADO 1: RESERVA DE SALAS
+# ================================================================
+
+class ReservaSala(Servicio):
+    # Servicio especializado para reservar salas.
+
+    def __init__(self, identificador, capacidad, precio_base=50000):
+        # Llama al constructor de Servicio.
+        super().__init__(identificador, "Reserva de sala", precio_base)
+
+        # Valida la capacidad de la sala.
+        if capacidad <= 0:
+            # Lanza error si la capacidad es inválida.
+            raise DatoInvalidoError("La capacidad de la sala debe ser mayor que cero.")
+
+        # Guarda la capacidad de la sala.
+        self.capacidad = capacidad
+
+    def calcular_costo(self, duracion, descuento=0, impuesto=0):
+        # Calcula el costo de reservar una sala.
+
+        try:
+            # Valida disponibilidad.
+            self.validar_disponibilidad()
+
+            # Valida que la duración sea positiva.
+            if duracion <= 0:
+                # Lanza error si la duración es inválida.
+                raise CalculoCostoError("La duración debe ser mayor que cero.")
+
+            # Calcula el costo base.
+            costo = self.precio_base * duracion
+
+            # Agrega costo adicional si la sala es grande.
+            if self.capacidad > 20:
+                # Aplica recargo por capacidad.
+                costo += 30000
+
+            # Aplica descuento.
+            costo -= costo * descuento
+
+            # Aplica impuesto.
+            costo += costo * impuesto
+
+            # Valida que el costo final no sea negativo.
+            if costo < 0:
+                # Lanza error si el costo es inconsistente.
+                raise CalculoCostoError("El costo calculado no puede ser negativo.")
+
+            # Retorna el costo final.
+            return costo
+
+        except Exception as error:
+            # Registra error en el log.
+            logging.error(f"Error calculando costo de sala: {error}")
+
+            # Encadena la excepción.
+            raise CalculoCostoError("No fue posible calcular el costo de la sala.") from error
+
+    def describir_servicio(self):
+        # Describe el servicio de sala.
+        return f"Sala con capacidad para {self.capacidad} personas."
+
+
+# ================================================================
+# SERVICIO ESPECIALIZADO 2: ALQUILER DE EQUIPOS
+# ================================================================
+
+class AlquilerEquipo(Servicio):
+    # Servicio especializado para alquiler de equipos.
+
+    def __init__(self, identificador, tipo_equipo, precio_base=35000):
+        # Llama al constructor de Servicio.
+        super().__init__(identificador, "Alquiler de equipo", precio_base)
+
+        # Valida que el tipo de equipo no esté vacío.
+        if not tipo_equipo or not tipo_equipo.strip():
+            # Lanza error si el tipo de equipo está vacío.
+            raise DatoInvalidoError("El tipo de equipo no puede estar vacío.")
+
+        # Guarda el tipo de equipo.
+        self.tipo_equipo = tipo_equipo.strip()
+
+    def calcular_costo(self, duracion, descuento=0, impuesto=0):
+        # Calcula el costo del alquiler de equipos.
+
+        try:
+            # Valida disponibilidad.
+            self.validar_disponibilidad()
+
+            # Valida que la duración sea positiva.
+            if duracion <= 0:
+                # Lanza error si la duración es inválida.
+                raise CalculoCostoError("La duración del alquiler debe ser mayor que cero.")
+
+            # Calcula el costo base.
+            costo = self.precio_base * duracion
+
+            # Aplica recargo si el equipo es especializado.
+            if self.tipo_equipo.lower() in ["servidor", "proyector", "computador"]:
+                # Suma recargo por equipo.
+                costo += 20000
+
+            # Aplica descuento.
+            costo -= costo * descuento
+
+            # Aplica impuesto.
+            costo += costo * impuesto
+
+            # Retorna el costo calculado.
+            return costo
+
+        except Exception as error:
+            # Registra error en el log.
+            logging.error(f"Error calculando costo de equipo: {error}")
+
+            # Encadena excepción.
+            raise CalculoCostoError("No fue posible calcular el costo del alquiler.") from error
+
+    def describir_servicio(self):
+        # Describe el servicio de alquiler.
+        return f"Alquiler de equipo tipo: {self.tipo_equipo}."
+
+
+# ================================================================
+# SERVICIO ESPECIALIZADO 3: ASESORÍAS ESPECIALIZADAS
+# ================================================================
+
+class AsesoriaEspecializada(Servicio):
+    # Servicio especializado para asesorías.
+
+    def __init__(self, identificador, area, precio_base=80000):
+        # Llama al constructor de Servicio.
+        super().__init__(identificador, "Asesoría especializada", precio_base)
+
+        # Valida que el área no esté vacía.
+        if not area or not area.strip():
+            # Lanza error si el área es inválida.
+            raise DatoInvalidoError("El área de asesoría no puede estar vacía.")
+
+        # Guarda el área de asesoría.
+        self.area = area.strip()
+
+    def calcular_costo(self, duracion, descuento=0, impuesto=0):
+        # Calcula el costo de una asesoría especializada.
+
+        try:
+            # Valida disponibilidad.
+            self.validar_disponibilidad()
+
+            # Valida duración positiva.
+            if duracion <= 0:
+                # Lanza error si la duración no es válida.
+                raise CalculoCostoError("La duración de la asesoría debe ser mayor que cero.")
+
+            # Calcula costo base.
+            costo = self.precio_base * duracion
+
+            # Recargo por asesorías críticas.
+            if self.area.lower() in ["seguridad", "arquitectura", "software"]:
+                # Suma recargo especializado.
+                costo += 50000
+
+            # Aplica descuento.
+            costo -= costo * descuento
+
+            # Aplica impuesto.
+            costo += costo * impuesto
+
+            # Retorna costo final.
+            return costo
+
+        except Exception as error:
+            # Registra error en log.
+            logging.error(f"Error calculando costo de asesoría: {error}")
+
+            # Encadena excepción.
+            raise CalculoCostoError("No fue posible calcular el costo de la asesoría.") from error
+
+    def describir_servicio(self):
+        # Describe la asesoría.
+        return f"Asesoría especializada en el área de {self.area}."
+
+
+# ================================================================
+# CLASE RESERVA
+# ================================================================
+
+class Reserva(EntidadSistema):
+    # Clase que integra cliente, servicio, duración, costo y estado.
+
+    def __init__(self, identificador, cliente, servicio, duracion):
+        # Llama al constructor de la clase padre.
+        super().__init__(identificador)
+
+        # Valida que cliente sea instancia de Cliente.
+        if not isinstance(cliente, Cliente):
+            # Lanza error si el cliente es inválido.
+            raise ReservaError("El cliente asociado no es válido.")
+
+        # Valida que servicio sea instancia de Servicio.
+        if not isinstance(servicio, Servicio):
+            # Lanza error si el servicio es inválido.
+            raise ReservaError("El servicio asociado no es válido.")
+
+        # Valida la duración.
+        if duracion <= 0:
+            # Lanza error si la duración es inválida.
+            raise ReservaError("La duración de la reserva debe ser mayor que cero.")
+
+        # Guarda el cliente.
+        self.cliente = cliente
+
+        # Guarda el servicio.
+        self.servicio = servicio
+
+        # Guarda la duración.
+        self.duracion = duracion
+
+        # Estado inicial de la reserva.
+        self.estado = "Creada"
+
+        # Costo inicial de la reserva.
+        self.costo = 0
+
+        # Fecha de creación de la reserva.
+        self.fecha_creacion = datetime.now()
+
+    def procesar(self):
+        # Procesa la reserva calculando su costo.
+
+        try:
+            # Calcula costo con impuesto del 19% y descuento del 5%.
+            self.costo = self.servicio.calcular_costo(
+                self.duracion,
+                descuento=0.05,
+                impuesto=0.19
+            )
+
+        except CalculoCostoError as error:
+            # Cambia estado a error.
+            self.estado = "Error"
+
+            # Registra error.
+            logging.error(f"Error procesando reserva {self.identificador}: {error}")
+
+            # Encadena error.
+            raise ReservaError("No fue posible procesar la reserva.") from error
+
+        else:
+            # Si no hay error, cambia estado a procesada.
+            self.estado = "Procesada"
+
+            # Registra evento exitoso.
+            logging.info(f"Reserva {self.identificador} procesada correctamente.")
+
+        finally:
+            # Este bloque siempre se ejecuta.
+            logging.info(f"Finalizó intento de procesamiento de reserva {self.identificador}.")
+
+    def confirmar(self):
+        # Confirma una reserva procesada.
+
+        try:
+            # Valida que la reserva esté procesada.
+            if self.estado != "Procesada":
+                # Lanza error si no se puede confirmar.
+                raise ReservaError("Solo se pueden confirmar reservas procesadas.")
+
+            # Cambia estado a confirmada.
+            self.estado = "Confirmada"
+
+        except ReservaError as error:
+            # Registra error.
+            logging.error(f"Error confirmando reserva {self.identificador}: {error}")
+
+            # Relanza excepción.
+            raise
+
+        else:
+            # Registra confirmación exitosa.
+            logging.info(f"Reserva {self.identificador} confirmada correctamente.")
+
+        finally:
+            # Registra fin del intento.
+            logging.info(f"Finalizó intento de confirmación de reserva {self.identificador}.")
+
+    def cancelar(self):
+        # Cancela una reserva.
+
+        try:
+            # Valida que la reserva no esté ya cancelada.
+            if self.estado == "Cancelada":
+                # Lanza error si ya estaba cancelada.
+                raise ReservaError("La reserva ya se encuentra cancelada.")
+
+            # Cambia estado a cancelada.
+            self.estado = "Cancelada"
+
+        except ReservaError as error:
+            # Registra error.
+            logging.error(f"Error cancelando reserva {self.identificador}: {error}")
+
+            # Relanza el error.
+            raise
+
+        else:
+            # Registra cancelación exitosa.
+            logging.info(f"Reserva {self.identificador} cancelada correctamente.")
+
+        finally:
+            # Registra finalización.
+            logging.info(f"Finalizó intento de cancelación de reserva {self.identificador}.")
+
+    def mostrar_info(self):
+        # Devuelve información completa de la reserva.
+        return (
+            f"Reserva: {self.identificador} | "
+            f"Cliente: {self.cliente.nombre} | "
+            f"Servicio: {self.servicio.nombre} | "
+            f"Duración: {self.duracion} hora(s) | "
+            f"Estado: {self.estado} | "
+            f"Costo: ${self.costo:,.0f}"
+        )
+
+
+# ================================================================
+# CLASE CONTROLADORA DEL SISTEMA
+# ================================================================
+
+class SistemaSoftwareFJ:
+    # Clase que administra clientes, servicios y reservas en listas internas.
+
+    def __init__(self):
+        # Lista interna de clientes.
+        self.clientes = []
+
+        # Lista interna de servicios.
+        self.servicios = []
+
+        # Lista interna de reservas.
+        self.reservas = []
+
+        # Carga servicios iniciales.
+        self.cargar_servicios_iniciales()
+
+    def cargar_servicios_iniciales(self):
+        # Crea servicios iniciales disponibles para el sistema.
+
+        try:
+            # Agrega servicio de sala.
+            self.servicios.append(ReservaSala("S1", capacidad=25))
+
+            # Agrega servicio de alquiler.
+            self.servicios.append(AlquilerEquipo("S2", tipo_equipo="Computador"))
+
+            # Agrega servicio de asesoría.
+            self.servicios.append(AsesoriaEspecializada("S3", area="Software"))
+
+        except SistemaFJError as error:
+            # Registra errores al cargar servicios.
+            logging.error(f"Error cargando servicios iniciales: {error}")
+
+    def agregar_cliente(self, nombre, documento, telefono, correo):
+        # Agrega un cliente nuevo al sistema.
+
+        try:
+            # Genera identificador automático.
+            identificador = f"C{len(self.clientes) + 1}"
+
+            # Crea el cliente.
+            cliente = Cliente(identificador, nombre, documento, telefono, correo)
+
+            # Verifica que el documento no esté repetido.
+            for cliente_existente in self.clientes:
+                # Compara documentos.
+                if cliente_existente.documento == cliente.documento:
+                    # Lanza error si ya existe.
+                    raise ClienteInvalidoError("Ya existe un cliente con ese documento.")
+
+            # Agrega cliente a la lista interna.
+            self.clientes.append(cliente)
+
+        except ClienteInvalidoError as error:
+            # Registra error de cliente.
+            logging.error(f"Error agregando cliente: {error}")
+
+            # Relanza error.
+            raise
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error inesperado agregando cliente: {error}")
+
+            # Encadena excepción.
+            raise SistemaFJError("No fue posible agregar el cliente.") from error
+
+        else:
+            # Registra evento exitoso.
+            logging.info(f"Cliente agregado correctamente: {cliente.mostrar_info()}")
+
+            # Retorna cliente creado.
+            return cliente
+
+        finally:
+            # Registra finalización del intento.
+            logging.info("Finalizó intento de agregar cliente.")
+
+    def crear_reserva(self, cliente, servicio, duracion):
+        # Crea una reserva y la almacena.
+
+        try:
+            # Genera identificador automático.
+            identificador = f"R{len(self.reservas) + 1}"
+
+            # Crea reserva.
+            reserva = Reserva(identificador, cliente, servicio, duracion)
+
+            # Procesa reserva para calcular costo.
+            reserva.procesar()
+
+            # Agrega reserva a la lista.
+            self.reservas.append(reserva)
+
+        except ReservaError as error:
+            # Registra error de reserva.
+            logging.error(f"Error creando reserva: {error}")
+
+            # Relanza error.
+            raise
+
+        except Exception as error:
+            # Registra error general.
+            logging.error(f"Error inesperado creando reserva: {error}")
+
+            # Encadena excepción.
+            raise SistemaFJError("No fue posible crear la reserva.") from error
+
+        else:
+            # Registra creación exitosa.
+            logging.info(f"Reserva creada correctamente: {reserva.mostrar_info()}")
+
+            # Retorna reserva.
+            return reserva
+
+        finally:
+            # Registra finalización.
+            logging.info("Finalizó intento de crear reserva.")
+
+    def obtener_cliente_por_documento(self, documento):
+        # Busca un cliente por documento.
+
+        for cliente in self.clientes:
+            # Compara el documento del cliente.
+            if cliente.documento == documento:
+                # Retorna cliente encontrado.
+                return cliente
+
+        # Lanza error si no se encuentra.
+        raise ClienteInvalidoError("No se encontró un cliente con ese documento.")
+
+    def generar_10_simulaciones(self):
+        # Genera 10 simulaciones del sistema para probar logs.
+
+        # Lista para guardar resultados.
+        resultados = []
+
+        # Datos de prueba.
+        datos_clientes = [
+            ("Ana Torres", "12345678", "3101234567", "ana@email.com"),
+            ("Luis Pérez", "87654321", "3207654321", "luis@email.com"),
+            ("", "11111", "3001234567", "correo@email.com"),
+            ("Carlos Mora", "abc123", "3009876543", "carlos@email.com"),
+            ("María Rojas", "22222222", "123", "maria@email.com"),
+            ("Pedro Gómez", "33333333", "3152223333", "correo_invalido"),
+            ("Laura Díaz", "44444444", "3163334444", "laura@email.com"),
+            ("Juan Castro", "55555555", "3174445555", "juan@email.com"),
+            ("Sofía Peña", "66666666", "3185556666", "sofia@email.com"),
+            ("Andrés Ruiz", "77777777", "3196667777", "andres@email.com")
+        ]
+
+        # Ejecuta 10 simulaciones.
+        for i in range(10):
+            # Inicia control de errores por simulación.
+            try:
+                # Obtiene datos del cliente.
+                nombre, documento, telefono, correo = datos_clientes[i]
+
+                # Intenta agregar cliente.
+                cliente = self.agregar_cliente(nombre, documento, telefono, correo)
+
+                # Selecciona servicio aleatorio.
+                servicio = random.choice(self.servicios)
+
+                # Genera duración aleatoria, incluyendo casos inválidos.
+                duracion = random.choice([1, 2, 3, -1, 0])
+
+                # Crea reserva.
+                reserva = self.crear_reserva(cliente, servicio, duracion)
+
+                # Decide aleatoriamente confirmar o cancelar.
+                accion = random.choice(["confirmar", "cancelar"])
+
+                # Ejecuta acción seleccionada.
+                if accion == "confirmar":
+                    # Confirma reserva.
+                    reserva.confirmar()
+                else:
+                    # Cancela reserva.
+                    reserva.cancelar()
+
+            except SistemaFJError as error:
+                # Registra error esperado del sistema.
+                mensaje = f"Simulación {i + 1}: ERROR CONTROLADO - {error}"
+
+                # Guarda mensaje en resultados.
+                resultados.append(mensaje)
+
+                # Registra en log.
+                logging.error(mensaje)
+
+            except Exception as error:
+                # Registra error inesperado.
+                mensaje = f"Simulación {i + 1}: ERROR INESPERADO - {error}"
+
+                # Guarda mensaje en resultados.
+                resultados.append(mensaje)
+
+                # Registra en log.
+                logging.error(mensaje)
+
+            else:
+                # Mensaje de simulación exitosa.
+                mensaje = f"Simulación {i + 1}: Correcta - {reserva.mostrar_info()}"
+
+                # Guarda mensaje.
+                resultados.append(mensaje)
+
+                # Registra evento exitoso.
+                logging.info(mensaje)
+
+            finally:
+                # Registra cierre de simulación.
+                logging.info(f"Finalizó simulación {i + 1}.")
+
+        # Retorna resultados.
+        return resultados
+
+
+# ================================================================
+# INTERFAZ GRÁFICA CON TKINTER
+# ================================================================
+
+class AplicacionTkinter:
+    # Clase encargada de crear y controlar la interfaz gráfica.
+
+    def __init__(self, ventana):
+        # Guarda la ventana principal.
+        self.ventana = ventana
+
+        # Crea una instancia del sistema.
+        self.sistema = SistemaSoftwareFJ()
+
+        # Configura el título de la ventana.
+        self.ventana.title("Software FJ - Gestión de Clientes, Servicios y Reservas")
+
+        # Configura el tamaño de la ventana.
+        self.ventana.geometry("1050x720")
+
+        # Evita que la ventana sea demasiado pequeña.
+        self.ventana.minsize(950, 650)
+
+        # Crea los componentes visuales.
+        self.crear_interfaz()
+
+    def crear_interfaz(self):
+        # Crea el contenedor principal.
+        contenedor = ttk.Frame(self.ventana, padding=10)
+
+        # Ubica el contenedor principal.
+        contenedor.pack(fill="both", expand=True)
+
+        # Crea título principal.
+        titulo = ttk.Label(
+            contenedor,
+            text="Sistema Integral de Gestión - Software FJ",
+            font=("Arial", 18, "bold")
+        )
+
+        # Ubica el título.
+        titulo.pack(pady=10)
+
+        # Crea notebook para pestañas.
+        self.notebook = ttk.Notebook(contenedor)
+
+        # Ubica el notebook.
+        self.notebook.pack(fill="both", expand=True)
+
+        # Crea pestañas.
+        self.frame_clientes = ttk.Frame(self.notebook)
+        self.frame_reservas = ttk.Frame(self.notebook)
+        self.frame_simulaciones = ttk.Frame(self.notebook)
+        self.frame_logs = ttk.Frame(self.notebook)
+
+        # Agrega pestañas al notebook.
+        self.notebook.add(self.frame_clientes, text="Clientes")
+        self.notebook.add(self.frame_reservas, text="Reservas")
+        self.notebook.add(self.frame_simulaciones, text="Simulaciones")
+        self.notebook.add(self.frame_logs, text="Logs")
+
+        # Construye cada pestaña.
+        self.crear_pestana_clientes()
+        self.crear_pestana_reservas()
+        self.crear_pestana_simulaciones()
+        self.crear_pestana_logs()
+
+    def crear_pestana_clientes(self):
+        # Crea marco del formulario.
+        formulario = ttk.LabelFrame(self.frame_clientes, text="Registrar cliente", padding=10)
+
+        # Ubica el formulario.
+        formulario.pack(fill="x", padx=10, pady=10)
+
+        # Crea variables de entrada.
+        self.var_nombre = tk.StringVar()
+        self.var_documento = tk.StringVar()
+        self.var_telefono = tk.StringVar()
+        self.var_correo = tk.StringVar()
+
+        # Crea etiquetas y campos.
+        ttk.Label(formulario, text="Nombre:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_nombre, width=35).grid(row=0, column=1, padx=5, pady=5)
+
+        ttk.Label(formulario, text="Documento:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_documento, width=35).grid(row=1, column=1, padx=5, pady=5)
+
+        ttk.Label(formulario, text="Teléfono:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_telefono, width=35).grid(row=2, column=1, padx=5, pady=5)
+
+        ttk.Label(formulario, text="Correo:").grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_correo, width=35).grid(row=3, column=1, padx=5, pady=5)
+
+        # Botón para agregar cliente.
+        ttk.Button(formulario, text="Agregar cliente", command=self.agregar_cliente_gui).grid(
+            row=4, column=0, columnspan=2, pady=10
+        )
+
+        # Lista de clientes.
+        lista_frame = ttk.LabelFrame(self.frame_clientes, text="Clientes registrados", padding=10)
+
+        # Ubica la lista.
+        lista_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Crea Listbox de clientes.
+        self.lista_clientes = tk.Listbox(lista_frame, height=12)
+
+        # Ubica Listbox.
+        self.lista_clientes.pack(fill="both", expand=True)
+
+    def crear_pestana_reservas(self):
+        # Crea marco del formulario de reservas.
+        formulario = ttk.LabelFrame(self.frame_reservas, text="Crear reserva", padding=10)
+
+        # Ubica formulario.
+        formulario.pack(fill="x", padx=10, pady=10)
+
+        # Variables de reserva.
+        self.var_doc_reserva = tk.StringVar()
+        self.var_servicio = tk.StringVar()
+        self.var_duracion = tk.StringVar()
+
+        # Etiqueta y entrada de documento.
+        ttk.Label(formulario, text="Documento cliente:").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_doc_reserva, width=35).grid(row=0, column=1, padx=5, pady=5)
+
+        # Etiqueta de servicio.
+        ttk.Label(formulario, text="Servicio:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
+
+        # Lista de nombres de servicios.
+        nombres_servicios = [servicio.nombre for servicio in self.sistema.servicios]
+
+        # Combobox de servicios.
+        self.combo_servicio = ttk.Combobox(
+            formulario,
+            textvariable=self.var_servicio,
+            values=nombres_servicios,
+            state="readonly",
+            width=32
+        )
+
+        # Ubica combobox.
+        self.combo_servicio.grid(row=1, column=1, padx=5, pady=5)
+
+        # Selecciona primer servicio por defecto.
+        if nombres_servicios:
+            self.combo_servicio.current(0)
+
+        # Entrada de duración.
+        ttk.Label(formulario, text="Duración en horas:").grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        ttk.Entry(formulario, textvariable=self.var_duracion, width=35).grid(row=2, column=1, padx=5, pady=5)
+
+        # Botón crear reserva.
+        ttk.Button(formulario, text="Crear reserva", command=self.crear_reserva_gui).grid(
+            row=3, column=0, columnspan=2, pady=10
+        )
+
+        # Marco de reservas.
+        lista_frame = ttk.LabelFrame(self.frame_reservas, text="Reservas registradas", padding=10)
+
+        # Ubica marco.
+        lista_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Lista de reservas.
+        self.lista_reservas = tk.Listbox(lista_frame, height=12)
+
+        # Ubica lista.
+        self.lista_reservas.pack(fill="both", expand=True)
+
+        # Marco de botones.
+        botones_frame = ttk.Frame(self.frame_reservas)
+
+        # Ubica botones.
+        botones_frame.pack(fill="x", padx=10, pady=5)
+
+        # Botón confirmar.
+        ttk.Button(botones_frame, text="Confirmar reserva seleccionada", command=self.confirmar_reserva_gui).pack(
+            side="left", padx=5
+        )
+
+        # Botón cancelar.
+        ttk.Button(botones_frame, text="Cancelar reserva seleccionada", command=self.cancelar_reserva_gui).pack(
+            side="left", padx=5
+        )
+
+    def crear_pestana_simulaciones(self):
+        # Crea marco para simulaciones.
+        frame = ttk.LabelFrame(self.frame_simulaciones, text="Prueba automática del sistema", padding=10)
+
+        # Ubica marco.
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Texto descriptivo.
+        descripcion = ttk.Label(
+            frame,
+            text="Este botón ejecuta 10 simulaciones automáticas con casos válidos e inválidos.\n"
+                 "Cada evento y error queda registrado en el archivo software_fj.log.",
+            font=("Arial", 11)
+        )
+
+        # Ubica descripción.
+        descripcion.pack(pady=10)
+
+        # Botón de simulaciones.
+        ttk.Button(frame, text="Ejecutar 10 simulaciones", command=self.ejecutar_simulaciones_gui).pack(pady=10)
+
+        # Área de resultados.
+        self.texto_simulaciones = tk.Text(frame, height=22, wrap="word")
+
+        # Ubica área de resultados.
+        self.texto_simulaciones.pack(fill="both", expand=True, pady=10)
+
+    def crear_pestana_logs(self):
+        # Crea marco de logs.
+        frame = ttk.LabelFrame(self.frame_logs, text="Archivo de logs", padding=10)
+
+        # Ubica marco.
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Botón cargar logs.
+        ttk.Button(frame, text="Actualizar logs", command=self.cargar_logs_gui).pack(pady=5)
+
+        # Área de texto de logs.
+        self.texto_logs = tk.Text(frame, height=30, wrap="word")
+
+        # Ubica área de texto.
+        self.texto_logs.pack(fill="both", expand=True)
+
+    def agregar_cliente_gui(self):
+        # Método conectado al botón de agregar cliente.
+
+        try:
+            # Obtiene valores del formulario.
+            nombre = self.var_nombre.get()
+            documento = self.var_documento.get()
+            telefono = self.var_telefono.get()
+            correo = self.var_correo.get()
+
+            # Agrega cliente usando el sistema.
+            cliente = self.sistema.agregar_cliente(nombre, documento, telefono, correo)
+
+        except SistemaFJError as error:
+            # Muestra error controlado.
+            messagebox.showerror("Error controlado", str(error))
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error inesperado en interfaz al agregar cliente: {error}")
+
+            # Muestra mensaje.
+            messagebox.showerror("Error inesperado", str(error))
+
+        else:
+            # Agrega cliente a la lista visual.
+            self.lista_clientes.insert(tk.END, cliente.mostrar_info())
+
+            # Limpia campos.
+            self.var_nombre.set("")
+            self.var_documento.set("")
+            self.var_telefono.set("")
+            self.var_correo.set("")
+
+            # Muestra confirmación.
+            messagebox.showinfo("Éxito", "Cliente agregado correctamente.")
+
+        finally:
+            # Actualiza logs.
+            self.cargar_logs_gui()
+
+    def crear_reserva_gui(self):
+        # Método conectado al botón de crear reserva.
+
+        try:
+            # Obtiene documento.
+            documento = self.var_doc_reserva.get()
+
+            # Obtiene nombre del servicio.
+            nombre_servicio = self.var_servicio.get()
+
+            # Convierte duración a entero.
+            try:
+                duracion = int(self.var_duracion.get())
+            except ValueError as error:
+                # Encadena error de conversión.
+                raise ReservaError("La duración debe ser un número entero.") from error
+
+            # Busca cliente por documento.
+            cliente = self.sistema.obtener_cliente_por_documento(documento)
+
+            # Busca servicio seleccionado.
+            servicio = None
+
+            # Recorre servicios disponibles.
+            for item in self.sistema.servicios:
+                # Compara nombre.
+                if item.nombre == nombre_servicio:
+                    # Asigna servicio.
+                    servicio = item
+
+            # Valida que exista servicio.
+            if servicio is None:
+                # Lanza error.
+                raise ServicioNoDisponibleError("Debe seleccionar un servicio válido.")
+
+            # Crea reserva.
+            reserva = self.sistema.crear_reserva(cliente, servicio, duracion)
+
+        except SistemaFJError as error:
+            # Muestra error controlado.
+            messagebox.showerror("Error controlado", str(error))
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error inesperado en interfaz al crear reserva: {error}")
+
+            # Muestra error inesperado.
+            messagebox.showerror("Error inesperado", str(error))
+
+        else:
+            # Inserta reserva en la lista visual.
+            self.lista_reservas.insert(tk.END, reserva.mostrar_info())
+
+            # Limpia campos.
+            self.var_doc_reserva.set("")
+            self.var_duracion.set("")
+
+            # Muestra éxito.
+            messagebox.showinfo("Éxito", "Reserva creada correctamente.")
+
+        finally:
+            # Actualiza logs.
+            self.cargar_logs_gui()
+
+    def confirmar_reserva_gui(self):
+        # Confirma la reserva seleccionada.
+
+        try:
+            # Obtiene índice seleccionado.
+            seleccion = self.lista_reservas.curselection()
+
+            # Valida que exista selección.
+            if not seleccion:
+                # Lanza error si no hay selección.
+                raise ReservaError("Debe seleccionar una reserva.")
+
+            # Obtiene índice.
+            indice = seleccion[0]
+
+            # Obtiene reserva.
+            reserva = self.sistema.reservas[indice]
+
+            # Confirma reserva.
+            reserva.confirmar()
+
+        except SistemaFJError as error:
+            # Muestra error controlado.
+            messagebox.showerror("Error controlado", str(error))
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error inesperado confirmando reserva desde GUI: {error}")
+
+            # Muestra error.
+            messagebox.showerror("Error inesperado", str(error))
+
+        else:
+            # Actualiza texto en lista.
+            self.lista_reservas.delete(indice)
+            self.lista_reservas.insert(indice, reserva.mostrar_info())
+
+            # Muestra mensaje.
+            messagebox.showinfo("Éxito", "Reserva confirmada correctamente.")
+
+        finally:
+            # Actualiza logs.
+            self.cargar_logs_gui()
+
+    def cancelar_reserva_gui(self):
+        # Cancela la reserva seleccionada.
+
+        try:
+            # Obtiene selección.
+            seleccion = self.lista_reservas.curselection()
+
+            # Valida selección.
+            if not seleccion:
+                # Lanza error.
+                raise ReservaError("Debe seleccionar una reserva.")
+
+            # Obtiene índice.
+            indice = seleccion[0]
+
+            # Obtiene reserva.
+            reserva = self.sistema.reservas[indice]
+
+            # Cancela reserva.
+            reserva.cancelar()
+
+        except SistemaFJError as error:
+            # Muestra error controlado.
+            messagebox.showerror("Error controlado", str(error))
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error inesperado cancelando reserva desde GUI: {error}")
+
+            # Muestra error.
+            messagebox.showerror("Error inesperado", str(error))
+
+        else:
+            # Actualiza lista.
+            self.lista_reservas.delete(indice)
+            self.lista_reservas.insert(indice, reserva.mostrar_info())
+
+            # Muestra mensaje.
+            messagebox.showinfo("Éxito", "Reserva cancelada correctamente.")
+
+        finally:
+            # Actualiza logs.
+            self.cargar_logs_gui()
+
+    def ejecutar_simulaciones_gui(self):
+        # Ejecuta 10 simulaciones desde la interfaz.
+
+        try:
+            # Ejecuta simulaciones.
+            resultados = self.sistema.generar_10_simulaciones()
+
+            # Limpia área de texto.
+            self.texto_simulaciones.delete("1.0", tk.END)
+
+            # Inserta resultados.
+            for resultado in resultados:
+                # Escribe cada resultado.
+                self.texto_simulaciones.insert(tk.END, resultado + "\n\n")
+
+        except Exception as error:
+            # Registra error inesperado.
+            logging.error(f"Error ejecutando simulaciones desde GUI: {error}")
+
+            # Muestra error.
+            messagebox.showerror("Error", str(error))
+
+        else:
+            # Muestra confirmación.
+            messagebox.showinfo("Simulaciones finalizadas", "Se ejecutaron 10 simulaciones. Revise el archivo software_fj.log.")
+
+            # Actualiza listas visuales.
+            self.actualizar_listas()
+
+        finally:
+            # Actualiza logs.
+            self.cargar_logs_gui()
+
+    def actualizar_listas(self):
+        # Actualiza listas visuales de clientes y reservas.
+
+        # Limpia lista de clientes.
+        self.lista_clientes.delete(0, tk.END)
+
+        # Carga clientes.
+        for cliente in self.sistema.clientes:
+            # Inserta cliente.
+            self.lista_clientes.insert(tk.END, cliente.mostrar_info())
+
+        # Limpia lista de reservas.
+        self.lista_reservas.delete(0, tk.END)
+
+        # Carga reservas.
+        for reserva in self.sistema.reservas:
+            # Inserta reserva.
+            self.lista_reservas.insert(tk.END, reserva.mostrar_info())
+
+    def cargar_logs_gui(self):
+        # Carga el contenido del archivo de logs en la interfaz.
+
+        try:
+            # Abre archivo de logs.
+            with open("software_fj.log", "r", encoding="utf-8") as archivo:
+                # Lee contenido.
+                contenido = archivo.read()
+
+        except FileNotFoundError:
+            # Si no existe el log, muestra mensaje vacío.
+            contenido = "El archivo de logs todavía no existe."
+
+        except Exception as error:
+            # Muestra error si no se puede leer.
+            contenido = f"No fue posible cargar los logs: {error}"
+
+        finally:
+            # Limpia el área de logs.
+            self.texto_logs.delete("1.0", tk.END)
+
+            # Inserta contenido.
+            self.texto_logs.insert(tk.END, contenido)
+
+
+# ================================================================
+# FUNCIÓN PRINCIPAL
+# ================================================================
+
+def main():
+    # Registra inicio del sistema.
+    logging.info("Iniciando aplicación Software FJ.")
+
+    # Crea ventana principal.
+    ventana = tk.Tk()
+
+    # Crea aplicación.
+    AplicacionTkinter(ventana)
+
+    # Ejecuta ciclo principal.
+    ventana.mainloop()
+
+    # Registra cierre del sistema.
+    logging.info("Aplicación Software FJ finalizada.")
+
+
+# ================================================================
+# PUNTO DE ENTRADA DEL PROGRAMA
+# ================================================================
+
+if __name__ == "__main__":
+    # Ejecuta función principal.
+    main()
