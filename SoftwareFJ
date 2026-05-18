@@ -1437,26 +1437,76 @@ class AplicacionTkinter:
             self.texto_logs.insert(tk.END, contenido)
 
 
-# FUNCIÓN PRINCIPAL
-
 def main():
-    # Registra inicio de la aplicación.
-    logging.info("Iniciando aplicación Software FJ.")
+    """
+    Función principal del sistema Software FJ.
+    Inicializa la aplicación, controla errores críticos
+    y registra eventos importantes en el archivo de logs.
+    """
 
-    # Crea ventana principal.
-    ventana = tk.Tk()
+    try:
+        # ======================================================
+        # INICIO DEL SISTEMA
+        # ======================================================
 
-    # Instancia la aplicación.
-    AplicacionTkinter(ventana)
+        logging.info("=" * 70)
+        logging.info("INICIANDO SOFTWARE FJ")
 
-    # Ejecuta el ciclo principal de Tkinter.
-    ventana.mainloop()
+        # Crear ventana principal
+        ventana = tk.Tk()
 
-    # Registra cierre de aplicación.
-    logging.info("Aplicación Software FJ finalizada.")
+        # Crear aplicación
+        app = AplicacionTkinter(ventana)
 
-# PUNTO DE ENTRADA DEL PROGRAMA
+        # ======================================================
+        # FUNCIÓN PARA CIERRE SEGURO
+        # ======================================================
 
+        def cerrar_sistema():
+            """
+            Solicita confirmación antes de cerrar el sistema.
+            """
 
-if __name__ == "__main__":
-    main()
+            confirmar = messagebox.askyesno(
+                "Salir del sistema",
+                "¿Desea cerrar Software FJ?"
+            )
+
+            if confirmar:
+                logging.info("Cierre de aplicación realizado correctamente.")
+                ventana.destroy()
+
+        # Evento de cierre de ventana
+        ventana.protocol("WM_DELETE_WINDOW", cerrar_sistema)
+
+        # ======================================================
+        # EJECUCIÓN DEL SISTEMA
+        # ======================================================
+
+        logging.info("Interfaz gráfica cargada correctamente.")
+        ventana.mainloop()
+
+    except Exception as error:
+        # ======================================================
+        # MANEJO DE ERRORES CRÍTICOS
+        # ======================================================
+
+        logging.critical(f"ERROR CRÍTICO DEL SISTEMA: {error}")
+
+        messagebox.showerror(
+            "Error crítico",
+            f"Ocurrió un error inesperado:\n{error}"
+        )
+
+    finally:
+        # ======================================================
+        # FINALIZACIÓN DEL SISTEMA
+        # ======================================================
+
+        logging.info("Aplicación Software FJ finalizada.")
+        logging.info("=" * 70)
+
+        print("\n==============================================")
+        print(" Gracias por utilizar Software FJ ")
+        print(" Sistema finalizado correctamente ")
+        print("==============================================")
