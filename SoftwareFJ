@@ -26,39 +26,31 @@ logging.basicConfig(
 
 # EXCEPCIONES PERSONALIZADAS
 
-
 class SistemaFJError(Exception):
     # Excepción base del sistema Software FJ.
     pass
-
 
 class DatoInvalidoError(SistemaFJError):
     # Excepción para datos inválidos.
     pass
 
-
 class ClienteInvalidoError(SistemaFJError):
     # Excepción para errores relacionados con clientes.
     pass
-
 
 class ServicioNoDisponibleError(SistemaFJError):
     # Excepción para servicios no disponibles.
     pass
 
-
 class ReservaError(SistemaFJError):
     # Excepción para errores relacionados con reservas.
     pass
-
 
 class CalculoCostoError(SistemaFJError):
     # Excepción para errores en cálculos de costos.
     pass
 
-
 # CLASE ABSTRACTA GENERAL DEL SISTEMA
-
 
 class EntidadSistema(ABC):
     # Clase abstracta que representa una entidad general del sistema.
@@ -166,7 +158,6 @@ class Cliente(EntidadSistema):
             f"Correo: {self.correo}"
         )
 
-
 # CLASE ABSTRACTA SERVICIO
 
 class Servicio(EntidadSistema):
@@ -237,7 +228,6 @@ class Servicio(EntidadSistema):
             f"Precio base: ${self.precio_base:,.0f} | "
             f"Estado: {estado}"
         )
-
 
 # SERVICIO 1: RESERVA DE SALAS
 
@@ -1069,9 +1059,7 @@ class AplicacionTkinter:
         self.var_correo.set("")
         self.documento_cliente_seleccionado = None
 
-    # ==========================================================================
     # PESTAÑA RESERVAS
-    # ==========================================================================
 
     def crear_pestana_reservas(self):
         # Crea formulario de reservas.
@@ -1286,7 +1274,6 @@ class AplicacionTkinter:
         for reserva in self.sistema.reservas:
             self.lista_reservas.insert(tk.END, reserva.mostrar_info())
 
-
     # PESTAÑA EDITAR SERVICIOS
 
     def crear_pestana_servicios(self):
@@ -1410,10 +1397,8 @@ class AplicacionTkinter:
             self.lista_servicios.insert(tk.END, f"Descripción: {servicio.describir_servicio()}")
             self.lista_servicios.insert(tk.END, "-" * 100)
 
-    
     # PESTAÑA LOGS
     
-
     def crear_pestana_logs(self):
         # Crea frame de logs.
         frame = ttk.LabelFrame(self.frame_logs, text="Archivo de logs .txt", padding=10)
@@ -1469,8 +1454,6 @@ def main():
 
     # Registra cierre de aplicación.
     logging.info("Aplicación Software FJ finalizada.")
-
-
 
 # PUNTO DE ENTRADA DEL PROGRAMA
 
